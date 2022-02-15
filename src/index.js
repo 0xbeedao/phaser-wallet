@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
 import roundButtons from './assets/buttons-round-200x201.png'
+import flaresJson from './assets/particles/flares.json';
+import flares from './assets/particles/flares.png';
 import { connect } from './wallet';
 
 const BUTTON_FRAMES = {
@@ -13,6 +15,7 @@ class WalletConnect extends Phaser.Scene {
     sprites = {};
     spriteFrames = { 'wallet': BUTTON_FRAMES.INACTIVE };
     provider = null;
+    emitter = null;
 
     constructor() {
         super();
@@ -24,14 +27,32 @@ class WalletConnect extends Phaser.Scene {
             frameHeight: 201,
             endFrame: 9,
         });
+        this.load.atlas('flares', flares, flaresJson);
     }
 
     create() {
-        console.log('create', this.width);
-        const wallet = this.add.sprite(this.game.config.width - 100, 50, 'roundButtons', BUTTON_FRAMES.INACTIVE);
+        const { width } = this.game.config;
+        const wallet = this.add.sprite(width - 100, 50, 'roundButtons', BUTTON_FRAMES.INACTIVE);
         wallet.setScale(0.35);
         this.makeWalletInteractive(wallet);
         this.sprites.wallet = wallet;
+        const particles = this.add.particles('flares');
+        const emitter = particles.createEmitter({
+            frame: { frames: ['blue', 'yellow'], cycle: true },
+            x: width - 100,
+            y: 50,
+            blendMode: 'ADD',
+            scale: { start: 0.2, end: 0.1 },
+            speed: { min: -100, max: 100 },
+            emitZone: {
+                source: new Phaser.Geom.Circle(0, 0, 35),
+                type: 'edge',
+                quantity: 50,
+                yoyo: false,
+            }
+        });
+        this.emitter = emitter;
+
     }
 
     makeWalletInteractive(wallet) {
@@ -49,6 +70,7 @@ class WalletConnect extends Phaser.Scene {
             this.setSpriteFrame('wallet', false);
             this.connected = false;
             this.provider.disconnect();
+            this.emitter.start();
             return;
         }
         console.log('connecting', button);
@@ -66,6 +88,7 @@ class WalletConnect extends Phaser.Scene {
             this.spriteFrames.wallet = BUTTON_FRAMES.INACTIVE;
         }
         this.setSpriteFrame('wallet', false);
+        this.emitter.explode();
         this.makeWalletInteractive(this.sprites.wallet);
     }
 
