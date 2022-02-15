@@ -1,6 +1,12 @@
-# Phaser 3 Webpack Project Template
+# Phaser Wallet
 
-A Phaser 3 project template with ES6 support via [Babel 7](https://babeljs.io/) and [Webpack 4](https://webpack.js.org/) that includes hot-reloading for development and production-ready builds.
+Just the simplest implementation of Web3Modal using PhaserIO libraries.
+
+## Phaser 3 Webpack Project Template with a built in Web3Modal wallet
+
+This project is based on the upsteam "phaser3-template", which is a Phaser 3 project template
+with ES6 support via [Babel 7](https://babeljs.io/) and [Webpack 4](https://webpack.js.org/) 
+that includes hot-reloading for development and production-ready builds.
 
 This has been updated for Phaser 3.50.0 version and above.
 
@@ -14,14 +20,11 @@ Loading images via JavaScript module `import` is also supported, although not re
 
 | Command | Description |
 |---------|-------------|
-| `npm install` | Install project dependencies |
-| `npm start` | Build project and open web server running project |
-| `npm run build` | Builds code bundle with production settings (minification, uglification, etc..) |
+| `pnpm install` | Install project dependencies |
+| `pnpm start` | Build project and open web server running project |
+| `pnpm run build` | Builds code bundle with production settings (minification, uglification, etc..) |
 
 ## Writing Code
-# Phaser Wallet
-
-Just the simplest implementation of Web3Modal using PhaserIO libraries.
 
 ## Building
 

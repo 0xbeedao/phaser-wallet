@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 
 import roundButtons from './assets/buttons-round-200x201.png'
-import flames from './assets/particles/flames.png';
 import flaresJson from './assets/particles/flares.json';
 import flares from './assets/particles/flares.png';
 import { connect } from './wallet';
@@ -29,33 +28,12 @@ class WalletConnect extends Phaser.Scene {
             endFrame: 9,
         });
         this.load.atlas('flares', flares, flaresJson);
-        this.load.spritesheet('flames', flames, {
-            frameWidth: 128,
-            frameHeight: 128,
-            endFrame: 1,
-        });
     }
 
     create() {
         const { width, height } = this.scale;
         console.log('width', width, 'height', height);
         const boardOutline = this.add.rectangle(0, 0, width - 100, height - 150, 0xffff44);
-        const flames = this.add.particles('flames');
-        const flameBorderEmitter = flames.createEmitter({
-            frame: { frames: [0, 1], cycle: true },
-            x: { min: 50, max: width - 50 },
-            y: { min: height - 50, max: height - 20 },
-            blendMode: 'ADD',
-            scale: { start: 0.5, end: 0.0015 },
-            speed: { min: -100, max: 100 },
-            quantity: 1,
-            emitZone: {
-                source: new Phaser.Geom.Line(0, 0, 10, 0),
-                quantity: 1,
-                type: 'edge',
-                yoyo: false,
-            },
-        });
         boardOutline.setOrigin(0, 0);
         boardOutline.setFillStyle(0x888888, 0.5);
         //boardOutline.setScale(2);
