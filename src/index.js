@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import roundButtons from './assets/buttons-round-200x201.png'
+import flames from './assets/particles/flames.png';
 import flaresJson from './assets/particles/flares.json';
 import flares from './assets/particles/flares.png';
 import { connect } from './wallet';
@@ -15,7 +16,7 @@ class WalletConnect extends Phaser.Scene {
     sprites = {};
     spriteFrames = { 'wallet': BUTTON_FRAMES.INACTIVE };
     provider = null;
-    emitter = null;
+    buttonEmitter = null;
 
     constructor() {
         super();
@@ -28,30 +29,57 @@ class WalletConnect extends Phaser.Scene {
             endFrame: 9,
         });
         this.load.atlas('flares', flares, flaresJson);
+        this.load.spritesheet('flames', flames, {
+            frameWidth: 128,
+            frameHeight: 128,
+            endFrame: 1,
+        });
     }
 
     create() {
-        const { width } = this.game.config;
-        const wallet = this.add.sprite(width - 100, 50, 'roundButtons', BUTTON_FRAMES.INACTIVE);
+        const { width, height } = this.scale;
+        console.log('width', width, 'height', height);
+        const boardOutline = this.add.rectangle(0, 0, width - 100, height - 150, 0xffff44);
+        const flames = this.add.particles('flames');
+        const flameBorderEmitter = flames.createEmitter({
+            frame: { frames: [0, 1], cycle: true },
+            x: { min: 50, max: width - 50 },
+            y: { min: height - 50, max: height - 20 },
+            blendMode: 'ADD',
+            scale: { start: 0.5, end: 0.0015 },
+            speed: { min: -100, max: 100 },
+            quantity: 1,
+            emitZone: {
+                source: new Phaser.Geom.Line(0, 0, 10, 0),
+                quantity: 1,
+                type: 'edge',
+                yoyo: false,
+            },
+        });
+        boardOutline.setOrigin(0, 0);
+        boardOutline.setFillStyle(0x888888, 0.5);
+        //boardOutline.setScale(2);
+        boardOutline.setPosition(50, 110);
+        const wallet = this.add.sprite(width - 50, 50, 'roundButtons', BUTTON_FRAMES.INACTIVE);
         wallet.setScale(0.35);
         this.makeWalletInteractive(wallet);
         this.sprites.wallet = wallet;
         const particles = this.add.particles('flares');
-        const emitter = particles.createEmitter({
+        const buttonEmitter = particles.createEmitter({
             frame: { frames: ['blue', 'yellow'], cycle: true },
-            x: width - 100,
+            x: width - 50,
             y: 50,
             blendMode: 'ADD',
-            scale: { start: 0.2, end: 0.1 },
+            scale: { start: 0.15, end: 0.1 },
             speed: { min: -100, max: 100 },
             emitZone: {
-                source: new Phaser.Geom.Circle(0, 0, 35),
+                source: new Phaser.Geom.Circle(0, 0, 38),
                 type: 'edge',
-                quantity: 50,
+                quantity: 64,
                 yoyo: false,
             }
         });
-        this.emitter = emitter;
+        this.buttonEmitter = buttonEmitter;
 
     }
 
@@ -70,7 +98,7 @@ class WalletConnect extends Phaser.Scene {
             this.setSpriteFrame('wallet', false);
             this.connected = false;
             this.provider.disconnect();
-            this.emitter.start();
+            this.buttonEmitter.start();
             return;
         }
         console.log('connecting', button);
@@ -88,7 +116,7 @@ class WalletConnect extends Phaser.Scene {
             this.spriteFrames.wallet = BUTTON_FRAMES.INACTIVE;
         }
         this.setSpriteFrame('wallet', false);
-        this.emitter.explode();
+        this.buttonEmitter.explode();
         this.makeWalletInteractive(this.sprites.wallet);
     }
 
@@ -110,8 +138,11 @@ class WalletConnect extends Phaser.Scene {
 
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        width: '100%',
+        height: '100%',
+    },
     scene: WalletConnect,
 };
 
