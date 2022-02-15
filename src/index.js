@@ -1,9 +1,18 @@
 import Phaser from 'phaser';
 
 import roundButtons from './assets/buttons-round-200x201.png'
+import { connect } from './wallet';
+
+const BUTTON_FRAMES = {
+    INACTIVE: 8,
+    CONNECTING: 4,
+    CONNECTED: 6,
+};
 
 class WalletConnect extends Phaser.Scene {
     sprites = {};
+    spriteFrames = { 'wallet': BUTTON_FRAMES.INACTIVE };
+    provider = null;
 
     constructor() {
         super();
@@ -18,48 +27,61 @@ class WalletConnect extends Phaser.Scene {
     }
 
     create() {
-        //const s1 = this.add.sprite(100, 100, 'roundButtons', 0);
-        //const s2 = this.add.sprite(100, 300, 'roundButtons', 4);
-        const s1 = this.add.circle(100, 100, 50, 0xffcc00);
-        const hitArea = new Phaser.Geom.Circle(50, 50, 50);
-        s1.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-        s1.on('pointerover', this.onOver, this);
-        s1.on('pointerout', this.onOut, this);
-        s1.on('pointerdown', this.onClick, this);
-
-        const w = this.add.sprite(100, 300, 'roundButtons', 4);
-        w.setScale(0.5);
-        this.sprites.wbutton = w;
-        const hitArea2 = new Phaser.Geom.Circle(50, 50, 100);
-        w.setInteractive(hitArea2, Phaser.Geom.Circle.Contagins);
-        w.on('pointerover', this.onOverW, this);
-        w.on('pointerout', this.onOutW, this);
-        console.log(s1);
-        this.sprites.button = s1;
+        console.log('create', this.width);
+        const wallet = this.add.sprite(this.game.config.width - 100, 50, 'roundButtons', BUTTON_FRAMES.INACTIVE);
+        wallet.setScale(0.35);
+        this.makeWalletInteractive(wallet);
+        this.sprites.wallet = wallet;
     }
 
-    onClick(button) {
-        console.log('clicked', button);
+    makeWalletInteractive(wallet) {
+        const hitArea = new Phaser.Geom.Circle(50, 50, 100);
+        wallet.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+        wallet.on('pointerover', this.onOver, this);
+        wallet.on('pointerout', this.onOut, this);
+        wallet.on('pointerdown', this.onClick, this);
+    }
+
+    async onClick(button) {
+        if (this.connected) {
+            console.log('disconnected');
+            this.spriteFrames.wallet = BUTTON_FRAMES.INACTIVE;
+            this.setSpriteFrame('wallet', false);
+            this.connected = false;
+            this.provider.disconnect();
+            return;
+        }
+        console.log('connecting', button);
+        this.sprites.wallet.removeInteractive();
+        this.spriteFrames.wallet = BUTTON_FRAMES.CONNECTING;
+        this.setSpriteFrame('wallet', false);
+        const provider = await connect();
+        console.log('connected', provider);
+        if (provider) {
+            this.spriteFrames.wallet = BUTTON_FRAMES.CONNECTED;
+            this.connected = true;
+            this.provider = provider;
+        } else {
+            this.connected = false;
+            this.spriteFrames.wallet = BUTTON_FRAMES.INACTIVE;
+        }
+        this.setSpriteFrame('wallet', false);
+        this.makeWalletInteractive(this.sprites.wallet);
     }
 
     onOver(button) {
-        this.sprites.button.fillColor = 0x00ff00;
+        this.setSpriteFrame('wallet', true);
         console.log('over', button);
     }
 
-    onOverW(button) {
-        this.sprites.wbutton.setFrame(5);
-        console.log('overW', button);
-    }
-
-    onOutW(button) {
-        this.sprites.wbutton.setFrame(4);
-        console.log('overW', button);
-    }
-
     onOut(button) {
-        this.sprites.button.fillColor = 0xffcc00;
+        this.setSpriteFrame('wallet', false);
         console.log('out', button);
+    }
+
+    setSpriteFrame(key, hover) {
+        const index = this.spriteFrames[key] + (hover ? 1 : 0);
+        this.sprites[key].setFrame(index);
     }
 }
 
